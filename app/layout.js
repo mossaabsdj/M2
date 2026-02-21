@@ -22,7 +22,14 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <div dir="rtl" className="font-sans bg-white overflow-x-hidden">
+          {/* ══════════════ GOOGLE FONTS ══════════════ */}
+          <link
+            href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Amiri:wght@400;700&display=swap"
+            rel="stylesheet"
+          />
+          {children}
+        </div>
       </body>
     </html>
   );

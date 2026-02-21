@@ -5,14 +5,22 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
+    engineType = "binary" 
+
 }
 
 datasource db {
   provider = "postgresql"
 }
 
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  name      String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+}
 
 enum Role {
   STUDENT
