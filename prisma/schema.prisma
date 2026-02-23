@@ -6,14 +6,15 @@
 
 generator client {
   provider = "prisma-client-js"
-    engineType = "binary" 
+  output   = "../generated/prisma"
+    transpile = true                    // يولد ملفات JS + TS
+
 
 }
 
 datasource db {
   provider = "postgresql"
 }
-
 model Feedback {
   id        Int      @id @default(autoincrement())
   name      String
@@ -21,268 +22,25 @@ model Feedback {
   comment   String
   createdAt DateTime @default(now())
 }
-
-enum Role {
-  STUDENT
-  PROF
-  ADMIN
-}
-
-enum SessionStatus {
-  OPEN
-  CLOSED
-}
-
-enum AttendanceStatus {
-  PRESENT
-  LATE
-  ABSENT
-  REJECTED
-}
-
-model User {
+model VerificationToken {
   id        String   @id @default(cuid())
-  role      Role
-  email     String?  @unique
-  username  String?  @unique // matricule/login
-  password  String   // hashed
-  isActive  Boolean  @default(true)
-
+  email     String
+  tokenHash String
+  expiresAt DateTime
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  student   Student?
-  prof      Prof?
-  admin     Admin?
-
-  sessionsOpened Session[] @relation("OpenedBy")
-  attendance     Attendance[]
 }
-
-model Student {
-  userId    String @id
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  matricule String @unique
+model Compte {
+  id        Int       @id @default(autoincrement())
   fullName  String
-
-  // الطالب ينتمي لمجموعة واحدة (Group) غالبًا
-  groupId   String?
-  group     Group?  @relation(fields: [groupId], references: [id], onDelete: SetNull)
-
-  enrollments Enrollment[]
+  email     String    @unique
+  phone     String?
+  country   String?
+  Password  String
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now())
 }
-
-model Prof {
-  userId    String @id
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  fullName  String
-  refIdCard String? @unique // RFID UID (optional)
-
-  teaches   TeachingAssignment[]
-}
-
-model Admin {
-  userId   String @id
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  fullName String
-}
-
-/* =========================
-   Academic Structure
-   Formation -> Section -> Group
-   Formation -> Module
-   ========================= */
-
-model Department {
-  id   String @id @default(cuid())
-  name String @unique
-
-  formations Formation[]
-  rooms      Room[]
-}
-
-model Formation {
-  id           String @id @default(cuid())
-  code         String // "L1-MI", "L2-INFO", "L2-MATH"
-  name         String // human readable
-  level        Int?   // 1,2,3... optional
-
-  departmentId String
-  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-
-  sections     Section[]
-  modules      Module[]
-
-  @@unique([departmentId, code])
-}
-
-model Section {
-  id          String @id @default(cuid())
-  name        String // "Section A", "S1", ...
-  formationId String
-  formation   Formation @relation(fields: [formationId], references: [id], onDelete: Cascade)
-
-  groups      Group[]
-
-  @@unique([formationId, name])
-  teachingAssignments TeachingAssignment[]
-}
-
-model Group {
-  id        String @id @default(cuid())
-  name      String // "G1", "G2" ...
-  sectionId String
-  section   Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-
-  students  Student[]
-  enrollments Enrollment[]
-  sessions  Session[]
-
-  @@unique([sectionId, name])
-  teachingAssignments TeachingAssignment[]
-}
-
-model Module {
-  id          String @id @default(cuid())
-  code        String // "ALG1", "POO", ...
-  title       String
-  semester    Int?   // optional: 1..6
-
-  formationId String
-  formation   Formation @relation(fields: [formationId], references: [id], onDelete: Cascade)
-
-  enrollments Enrollment[]
-  teaches     TeachingAssignment[]
-  sessions    Session[]
-
-  @@unique([formationId, code])
-}
-
-/* =========================
-   Enrollment & Teaching
-   ========================= */
-
-// تسجيل طالب في Module حسب Group (هذا يعطيك مرونة كبيرة)
-model Enrollment {
-  id        String @id @default(cuid())
-
-  studentId String
-  student   Student @relation(fields: [studentId], references: [userId], onDelete: Cascade)
-
-  moduleId  String
-  module    Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-
-  groupId   String?
-  group     Group?  @relation(fields: [groupId], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
-
-  @@unique([studentId, moduleId])
-  @@index([moduleId])
-  @@index([studentId])
-}
-
-// أستاذ يدرّس Module (إما لكل formation أو section أو group حسب التنظيم)
-model TeachingAssignment {
-  id       String @id @default(cuid())
-
-  profId   String
-  prof     Prof   @relation(fields: [profId], references: [userId], onDelete: Cascade)
-
-  moduleId String
-  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-
-  // optional scoping (اختياري)
-  sectionId String?
-  section   Section? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
-
-  groupId   String?
-  group     Group?   @relation(fields: [groupId], references: [id], onDelete: SetNull)
-
-  @@index([profId])
-  @@index([moduleId])
-}
-
-/* =========================
-   Rooms, IoT, Sessions, Attendance
-   ========================= */
-
-model Room {
-  id           String @id @default(cuid())
-  code         String // "S12", "A203"
-  name         String?
-
-  departmentId String
-  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-
-  devices      IoTDevice[]
-  sessions     Session[]
-
-  @@unique([departmentId, code])
-}
-
-model IoTDevice {
-  id        String  @id @default(cuid())
-  deviceKey String  @unique // for device auth (hash recommended)
-  label     String?
-  roomId    String?
-  room      Room?   @relation(fields: [roomId], references: [id], onDelete: SetNull)
-
-  isActive  Boolean @default(true)
-  lastSeen  DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Session {
-  id         String @id @default(cuid())
-  status     SessionStatus @default(OPEN)
-
-  moduleId   String
-  module     Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-
-  roomId     String
-  room       Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
-
-  // Optional: session for a specific group (useful!)
-  groupId    String?
-  group      Group? @relation(fields: [groupId], references: [id], onDelete: SetNull)
-
-  openedById String
-  openedBy   User   @relation("OpenedBy", fields: [openedById], references: [id], onDelete: Cascade)
-
-  startAt    DateTime @default(now())
-  endAt      DateTime?
-  expiresAt  DateTime // e.g. start + 20 minutes for QR window
-  periodSec  Int      @default(30)
-
-  attendances Attendance[]
-
-  @@index([roomId, status])
-  @@index([moduleId, status])
-  @@index([groupId, status])
-}
-
-model Attendance {
-  id        String @id @default(cuid())
-
-  sessionId String
-  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-
-  userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  status    AttendanceStatus @default(PRESENT)
-  markedAt  DateTime @default(now())
-
-  ip        String?
-  userAgent String?
-
-  @@unique([sessionId, userId])
-  @@index([userId])
-  @@index([sessionId])
+enum Role {
+  ADMIN
+  USER
+ 
 }

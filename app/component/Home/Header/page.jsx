@@ -604,7 +604,6 @@ export default function MathProfHeader({
   onLogout,
 }) {
   const { brand, theme, nav, levels, cta, userMenu } = config;
-
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -640,20 +639,11 @@ export default function MathProfHeader({
         style={{
           backdropFilter: "blur(18px)",
           WebkitBackdropFilter: "blur(18px)",
-          borderBottom: `1.5px solid ${theme.border}`,
         }}
         animate={scrolled ? "scrolled" : "top"}
         variants={headerVariants}
         initial="top"
       >
-        {/* Top accent line */}
-        <div
-          className="absolute top-0 left-0 right-0 h-[3px] rounded-b"
-          style={{
-            background: `linear-gradient(90deg, ${theme.primary}, ${theme.accent}, ${theme.teal})`,
-          }}
-        />
-
         <div className="max-w-full mx-auto px-12 h-[68px] flex items-center gap-10">
           {/* ── Brand ── */}
           <motion.a
@@ -757,7 +747,7 @@ export default function MathProfHeader({
                     {cta.login}
                   </motion.button>
                   <motion.button
-                    className="bg-gradient-to-br from-green-500 to-green-700 text-white border-0 rounded-xl px-5 py-2.5 font-bold text-sm cursor-pointer shadow-sm shadow-green-200 hover:shadow-lg hover:shadow-green-300 transition-all"
+                    className="bg-green-600 text-white border-0 rounded-xl px-5 py-2.5 font-bold text-sm cursor-pointer  hover:shadow-2xs hover:shadow-gray-500 transition-all"
                     whileHover={{ opacity: 0.88, y: -1 }}
                     whileTap={{ scale: 0.96 }}
                   >

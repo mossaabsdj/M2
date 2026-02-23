@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import FeedbackModal from "../FeedBack/page";
+import ProfessorCard from "../ProfCard/page";
 import Image from "next/image";
 import {
   Ruler,
@@ -404,9 +405,18 @@ export default function MathHero() {
   const heroInView = useInView(heroRef, { once: true });
   const featInView = useInView(featRef, { once: true, margin: "-80px" });
   const testInView = useInView(testRef, { once: true, margin: "-80px" });
+
+  //fedback------------------------------------------------------------------------------
   const [showModal, setShowModal] = useState(false);
   const [feedbacks, setFeedbacks] = useState([]);
-
+  const [page, setPage] = useState(0);
+  const ITEMS_PER_PAGE = 3;
+  const totalPages = Math.ceil(feedbacks.length / ITEMS_PER_PAGE);
+  const paginated = feedbacks.slice(
+    page * ITEMS_PER_PAGE,
+    (page + 1) * ITEMS_PER_PAGE,
+  );
+  //---------------------------------------------------------------------------------
   useEffect(() => {
     fetch("/api/feedback")
       .then((res) => res.json())
@@ -422,95 +432,60 @@ export default function MathHero() {
       />
 
       {/* ══════════════ HERO SECTION ══════════════ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-green-50 via-white to-green-50">
-        {/* Grid overlay */}
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(34,197,94,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,0.06) 1px, transparent 1px)",
-            backgroundSize: "55px 55px",
-          }}
-        />
+      <section className="relative min-h-screen flex items-center overflow-hidden bg-white">
+        {/* Subtle radial glow */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-green-50 rounded-full blur-3xl opacity-60 translate-x-1/3 -translate-y-1/4" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-green-50 rounded-full blur-3xl opacity-50 -translate-x-1/4 translate-y-1/4" />
+        </div>
 
-        {/* Glow blobs */}
-        <div
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            width: 600,
-            height: 600,
-            background: "rgba(34,197,94,0.07)",
-            top: -180,
-            right: -200,
-            filter: "blur(100px)",
-          }}
-        />
-        <div
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            width: 450,
-            height: 450,
-            background: "rgba(74,222,128,0.06)",
-            bottom: -100,
-            left: -100,
-            filter: "blur(100px)",
-          }}
-        />
-        <div
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            width: 300,
-            height: 300,
-            background: "rgba(134,239,172,0.08)",
-            top: "30%",
-            left: "30%",
-            filter: "blur(100px)",
-          }}
-        />
-
-        {/* Content */}
-        <div
-          ref={heroRef}
-          className="relative z-10 w-full max-w-7xl mx-auto px-10 py-16 flex flex-col lg:flex-row items-center gap-14"
-        >
-          {/* TEXT */}
-          <div className="flex-1 min-w-0">
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={heroInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.6 }}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-10 py-20 flex flex-col lg:flex-row items-center gap-16">
+          {/* ── Text Content ── */}
+          <motion.div
+            className="flex-1 min-w-0 flex flex-col items-start gap-6"
+            dir="rtl"
+            initial={{ opacity: 0, x: 36 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
+            {/* Pill */}
+            <motion.span
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.1, ease: "easeOut" }}
+              className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-5 py-1.5 text-green-700 font-bold text-sm"
+              style={{ fontFamily: "'Cairo', sans-serif" }}
             >
-              <span
-                className="inline-flex items-center gap-2 bg-green-50 border border-green-300 rounded-full px-5 py-1.5 text-green-700 font-bold text-sm"
-                style={{ fontFamily: "'Cairo', sans-serif" }}
-              >
-                <span className="text-base">🎓</span>
-                منصة تعليمية متخصصة في الرياضيات
-              </span>
-            </motion.div>
+              🎓 منصة تعليمية متخصصة في الرياضيات
+            </motion.span>
 
+            {/* Headline */}
             <motion.h1
-              initial={{ opacity: 0, x: 30 }}
-              animate={heroInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.7, delay: 0.15 }}
-              className="mt-5 mb-2 font-black text-gray-900 leading-tight"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.2, ease: "easeOut" }}
+              className="font-black text-gray-900 leading-snug"
               style={{
                 fontFamily: "'Cairo', sans-serif",
-                fontSize: "clamp(2.2rem,4.5vw,3.8rem)",
+                fontSize: "clamp(2rem, 4.5vw, 3.5rem)",
               }}
             >
               تعلّم الرياضيات
               <br />
-              <span className="bg-gradient-to-r from-green-700 via-green-500 to-green-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-l from-green-700 via-green-500 to-green-400 bg-clip-text text-transparent">
                 بأسلوب مختلف
               </span>
             </motion.h1>
 
+            {/* Description */}
             <motion.p
-              initial={{ opacity: 0, x: 30 }}
-              animate={heroInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.7, delay: 0.25 }}
-              className="text-gray-500 text-base leading-loose max-w-lg mt-4 mb-8"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.3, ease: "easeOut" }}
+              className="text-gray-500 text-base leading-loose max-w-md"
               style={{ fontFamily: "'Cairo', sans-serif" }}
             >
               منصة متكاملة للأستاذ الجزائري — دروس وتمارين وامتحانات للمرحلة
@@ -522,335 +497,306 @@ export default function MathHero() {
 
             {/* Level tags */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.35 }}
-              className="flex flex-wrap gap-2.5 mb-9"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.38, ease: "easeOut" }}
+              className="flex flex-wrap gap-2"
             >
-              {[
-                {
-                  label: "متوسط 1 – 4",
-                  cls: "bg-green-50 border-green-200 text-green-800",
-                },
-                {
-                  label: "ثانوي 1 – 3",
-                  cls: "bg-green-100 border-green-300 text-green-700",
-                },
-                {
-                  label: "BEM",
-                  cls: "bg-emerald-50 border-emerald-200 text-emerald-700",
-                },
-                {
-                  label: "BAC",
-                  cls: "bg-teal-50 border-teal-200 text-teal-700",
-                },
-              ].map((tag) => (
+              {["متوسط 1 – 4", "ثانوي 1 – 3", "BEM", "BAC"].map((tag) => (
                 <span
-                  key={tag.label}
-                  className={`${tag.cls} border rounded-lg px-4 py-1.5 text-sm font-bold`}
+                  key={tag}
+                  className="bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-1.5 text-sm font-bold"
                   style={{ fontFamily: "'Cairo', sans-serif" }}
                 >
-                  {tag.label}
+                  {tag}
                 </span>
               ))}
             </motion.div>
 
             {/* CTA */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.45 }}
-              className="flex flex-wrap gap-3.5"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.46, ease: "easeOut" }}
             >
               <button
-                className="bg-gradient-to-br from-green-500 flex flex-row gap-1 justify-center  to-green-700 text-white border-0 rounded-xl px-8 py-3.5 font-bold text-base cursor-pointer shadow-lg shadow-green-200 hover:shadow-xl hover:shadow-green-300 hover:-translate-y-0.5 transition-all"
+                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded-xl px-7 py-3 font-bold text-base transition-colors duration-200 cursor-pointer"
                 style={{ fontFamily: "'Cairo', sans-serif" }}
               >
-                <span>ابدأ التعلّم</span>
-                <Rocket />
-              </button>
-              <button
-                className="bg-white text-green-700 border-2 border-green-200 rounded-xl  flex flex-row gap-1 justify-center px-7 py-3 font-bold text-base cursor-pointer hover:border-green-400 hover:bg-green-50 transition-all"
-                style={{ fontFamily: "'Cairo', sans-serif" }}
-              >
-                <Play />
-                <span> استعرض الدروس</span>
+                <Play className="w-4 h-4" />
+                استعرض الدروس
               </button>
             </motion.div>
 
             {/* Stats */}
-
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              className="flex flex-wrap gap-3.5 mt-12"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.55, ease: "easeOut" }}
+              className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full mt-2"
             >
               {[
-                {
-                  value: "+500",
-                  label: "درس ومحاضرة",
-                  icon: BookOpen,
-                },
-                {
-                  value: "+200",
-                  label: "تمرين محلول",
-                  icon: PenTool,
-                },
-                {
-                  value: "+50",
-                  label: "أستاذ متخصص",
-                  icon: GraduationCap,
-                },
-                {
-                  value: "4.9",
-                  label: "تقييم الطلاب",
-                  icon: Star,
-                },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="flex-1 min-w-[90px] bg-white border border-green-100 rounded-2xl p-4 text-center shadow-sm shadow-green-100 hover:shadow-md hover:shadow-green-200 hover:-translate-y-1 transition-all"
+                { value: "+500", label: "درس ومحاضرة", icon: BookOpen },
+                { value: "+200", label: "تمرين محلول", icon: PenTool },
+                { value: "+50", label: "أستاذ متخصص", icon: GraduationCap },
+                { value: "4.9★", label: "تقييم الطلاب", icon: Star },
+              ].map(({ value, label, icon: Icon }, i) => (
+                <motion.div
+                  key={label}
+                  initial={{ opacity: 0, scale: 0.75 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{
+                    delay: 0.6 + i * 0.08,
+                    type: "spring",
+                    stiffness: 220,
+                    damping: 20,
+                  }}
+                  className="bg-white border border-green-100 rounded-2xl p-4 text-center hover:-translate-y-0.5 transition-transform duration-200"
                 >
-                  <div className="flex justify-center mb-1 text-green-600">
-                    <stat.icon size={22} strokeWidth={2.2} />
-                  </div>
-
+                  <Icon className="mx-auto mb-2 text-green-400 w-4 h-4" />
                   <div
-                    className="font-black text-green-700 text-xl leading-none"
+                    className="font-black text-green-700 text-lg leading-none"
                     style={{ fontFamily: "'Cairo', sans-serif" }}
                   >
-                    {stat.value}
-                    {stat.label === "تقييم الطلاب" && "★"}
+                    {value}
                   </div>
-
                   <div
                     className="text-gray-400 text-xs mt-1"
                     style={{ fontFamily: "'Cairo', sans-serif" }}
                   >
-                    {stat.label}
+                    {label}
                   </div>
-                </div>
+                </motion.div>
               ))}
             </motion.div>
-          </div>
-
-          {/* PROFESSOR IMAGE */}
+          </motion.div>
+          {/* ── Professor Image ── */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.88, x: -30 }}
-            animate={heroInView ? { opacity: 1, scale: 1, x: 0 } : {}}
-            transition={{ duration: 0.9, delay: 0.2, ease: "easeOut" }}
-            className="
-    relative flex-shrink-0
-    w-[280px] h-[420px]
-    sm:w-[440px] sm:h-[520px]
-  "
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="relative flex-shrink-0 w-[300px] h-[420px] sm:w-[360px] sm:h-[480px] md:w-[420px] md:h-[540px]"
           >
-            {/* Rings */}
-            {[1, 2, 3].map((ring) => (
-              <motion.div
-                key={ring}
-                className="absolute rounded-full pointer-events-none"
-                style={{
-                  inset: -(ring * 18),
-                  borderRadius: "50% 50% 0 0 / 60% 60% 0 0",
-                  border: `1.5px solid rgba(34,197,94,${0.18 - ring * 0.05})`,
-                }}
-                animate={{ scale: [1, 1.022, 1] }}
-                transition={{
-                  duration: 3 + ring,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: ring * 0.4,
-                }}
-              />
-            ))}
-
-            {/* Animated blob */}
+            {/* ── Decorative rings ── */}
             <motion.div
-              className="absolute"
-              style={{
-                top: -25,
-                left: -25,
-                right: -25,
-                bottom: -12,
-                background:
-                  "linear-gradient(160deg, rgba(34,197,94,0.1) 0%, rgba(134,239,172,0.06) 100%)",
-                border: "1.5px solid rgba(34,197,94,0.15)",
-              }}
-              animate={{
-                borderRadius: [
-                  "60% 40% 60% 40% / 50% 60% 40% 50%",
-                  "50% 50% 40% 60% / 60% 40% 60% 40%",
-                  "60% 40% 60% 40% / 50% 60% 40% 50%",
-                ],
-              }}
-              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-            />
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, delay: 0.1 }}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            >
+              <div className="w-[85%] h-[85%] rounded-full border border-green-200/50" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, delay: 0.2 }}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            >
+              <div className="w-[96%] h-[96%] rounded-full border border-green-100/40" />
+            </motion.div>
 
-            {/* Glow dots */}
+            {/* ── Main blob background ── */}
+            <svg
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] z-0"
+              viewBox="0 0 500 500"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient
+                  id="blobGrad"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="100%"
+                >
+                  <stop offset="0%" stopColor="#bbf7d0" />
+                  <stop offset="60%" stopColor="#dcfce7" />
+                  <stop offset="100%" stopColor="#f0fdf4" />
+                </linearGradient>
+              </defs>
+              <motion.path
+                initial={{ pathLength: 0, opacity: 0 }}
+                whileInView={{ pathLength: 1, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.2, delay: 0.2, ease: "easeOut" }}
+                fill="url(#blobGrad)"
+                d="M430,290Q410,430,275,445Q140,460,80,335Q20,210,100,120Q180,30,300,45Q420,60,445,155Q470,250,430,290Z"
+              />
+            </svg>
+
+            {/* ── Floating dot accents ── */}
             {[
-              { top: "8%", right: "-6%", color: "#22c55e" },
-              { top: "48%", left: "-8%", color: "#4ade80" },
-              { bottom: "18%", right: "-7%", color: "#86efac" },
+              {
+                size: 10,
+                top: "8%",
+                left: "12%",
+                delay: 0.6,
+                color: "bg-green-300",
+              },
+              {
+                size: 7,
+                top: "15%",
+                left: "82%",
+                delay: 0.75,
+                color: "bg-emerald-200",
+              },
+              {
+                size: 12,
+                top: "80%",
+                left: "78%",
+                delay: 0.9,
+                color: "bg-green-200",
+              },
+              {
+                size: 6,
+                top: "72%",
+                left: "8%",
+                delay: 1.0,
+                color: "bg-teal-300",
+              },
             ].map((dot, i) => (
               <motion.div
                 key={i}
-                className="absolute rounded-full w-3 h-3"
-                style={{
-                  background: dot.color,
-                  boxShadow: `0 0 20px ${dot.color}80`,
-                  top: dot.top,
-                  bottom: dot.bottom,
-                  left: dot.left,
-                  right: dot.right,
+                initial={{ opacity: 0, scale: 0 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{
+                  delay: dot.delay,
+                  type: "spring",
+                  stiffness: 200,
                 }}
-                animate={{ scale: [1, 1.65, 1], opacity: [0.9, 0.4, 0.9] }}
-                transition={{ duration: 2.2, repeat: Infinity, delay: i * 0.6 }}
+                className={`absolute rounded-full ${dot.color} opacity-70`}
+                style={{
+                  width: dot.size,
+                  height: dot.size,
+                  top: dot.top,
+                  left: dot.left,
+                }}
               />
             ))}
 
-            {/* Image container */}
-            <div
-              className="
-    absolute bottom-0 left-1/2 -translate-x-1/2 overflow-hidden
-    w-[240px] h-[350px]
-    sm:w-[300px] sm:h-[400px]
-    md:w-[370px] md:h-[480px]
-  "
-            >
-              <div className="w-full h-full bg-gradient-to-b from-green-100 via-green-50 to-green-50 flex items-end justify-center relative overflow-hidden">
-                {/* Formula watermark */}
-                <div
-                  className="absolute z-0 inset-0 flex flex-col justify-around px-7 py-6 overflow-hidden pointer-events-none"
-                  style={{
-                    opacity: 0.32,
-                    fontFamily: "'Amiri', serif",
-                    fontSize: 13,
-                    color: "#15803d",
-                    lineHeight: 2.2,
-                  }}
-                >
-                  {[
-                    "f(x) = ax² + bx + c",
-                    "∫₀^π sin(x)dx = 2",
-                    "lim(x→∞) 1/x = 0",
-                    "P(A∪B) = P(A)+P(B)-P(A∩B)",
-                    "cos²θ + sin²θ = 1",
-                    "e^(iπ) + 1 = 0",
-                    "d/dx(xⁿ) = nxⁿ⁻¹",
-                  ].map((f, i) => (
-                    <div key={i}>{f}</div>
-                  ))}
-                </div>
-                <Image
-                  src="/images/prof.webp"
-                  width={300}
-                  className="z-10"
-                  height={400}
-                  alt="Profile image"
-                />
-              </div>
-            </div>
-
-            {/* Badge: level */}
+            {/* ── Image ── */}
             <motion.div
-              initial={{ opacity: 0, scale: 0, y: 10 }}
-              animate={heroInView ? { opacity: 1, scale: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.85, type: "spring" }}
-              className="
-    absolute
-    top-6 right-0 
-    bg-white border border-green-200 rounded-2xl
-    px-3 py-2
-    sm:px-4 sm:py-3
-    shadow-lg shadow-green-100
-    top-4 right-2
-    sm:top-7 sm:-right-6
-  "
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.35, ease: "easeOut" }}
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[80%] h-[92%] z-10"
             >
-              <div
-                className="text-gray-400 text-xs mb-0.5"
+              <Image
+                src="/images/prof.webp"
+                fill
+                alt="Professor"
+                className="object-contain object-bottom drop-shadow-xl"
+              />
+            </motion.div>
+
+            {/* ── Badge: Level ── */}
+            <motion.div
+              initial={{ opacity: 0, x: 20, scale: 0.85 }}
+              whileInView={{ opacity: 1, x: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{
+                delay: 0.6,
+                type: "spring",
+                stiffness: 200,
+                damping: 18,
+              }}
+              className="absolute top-8 -right-2 sm:-right-6 z-20 bg-white border border-green-100 rounded-2xl px-4 py-2.5 shadow-lg shadow-green-100/50"
+            >
+              <p
+                className="text-gray-400 text-[10px] leading-none mb-1"
                 style={{ fontFamily: "'Cairo', sans-serif" }}
               >
                 المستوى
-              </div>
-              <div
+              </p>
+              <p
                 className="text-green-700 font-extrabold text-sm"
                 style={{ fontFamily: "'Cairo', sans-serif" }}
               >
                 CEM & Lycée
-              </div>
+              </p>
             </motion.div>
 
-            {/* Badge: rating */}
+            {/* ── Badge: Rating ── */}
             <motion.div
-              initial={{ opacity: 0, scale: 0, y: -10 }}
-              animate={heroInView ? { opacity: 1, scale: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 1.05, type: "spring" }}
-              className="absolute bg-white border text-green-700 border-green-200 rounded-2xl px-4 py-3 shadow-lg shadow-green-100 flex items-center gap-2.5"
-              style={{ bottom: 38, left: -28 }}
+              initial={{ opacity: 0, x: -20, scale: 0.85 }}
+              whileInView={{ opacity: 1, x: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{
+                delay: 0.75,
+                type: "spring",
+                stiffness: 200,
+                damping: 18,
+              }}
+              className="absolute bottom-16 -left-2 sm:-left-8 z-20 flex items-center gap-2.5 bg-white border border-green-100 rounded-2xl px-4 py-2.5 shadow-lg shadow-green-100/50"
             >
-              <Star />
+              <div className="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                <Star className="text-green-500 w-4 h-4 fill-green-400" />
+              </div>
               <div>
-                <div
-                  className="text-green-700 font-extrabold text-base leading-none"
+                <p
+                  className="text-green-700 font-extrabold text-sm leading-none"
                   style={{ fontFamily: "'Cairo', sans-serif" }}
                 >
-                  4.9/5
-                </div>
-                <div
-                  className="text-gray-400 text-xs mt-0.5"
+                  4.9 / 5
+                </p>
+                <p
+                  className="text-gray-400 text-[10px] mt-0.5"
                   style={{ fontFamily: "'Cairo', sans-serif" }}
                 >
                   تقييم الطلاب
-                </div>
+                </p>
               </div>
             </motion.div>
 
-            {/* Badge: students */}
+            {/* ── Badge: Students ── */}
             <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={heroInView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ duration: 0.5, delay: 1.2, type: "spring" }}
-              className="absolute bg-white border text-green-700 border-green-200 rounded-2xl px-4 py-2.5 shadow-md shadow-green-100 flex items-center gap-2"
-              style={{ top: "40%", left: -32 }}
+              initial={{ opacity: 0, x: -20, scale: 0.85 }}
+              whileInView={{ opacity: 1, x: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{
+                delay: 0.9,
+                type: "spring",
+                stiffness: 200,
+                damping: 18,
+              }}
+              className="absolute top-[38%] -left-2 sm:-left-8 z-20 flex items-center gap-2.5 bg-white border border-green-100 rounded-2xl px-4 py-2.5 shadow-lg shadow-green-100/50"
             >
-              <Users2 />
+              <div className="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                <GraduationCap className="text-green-500 w-4 h-4" />
+              </div>
               <div>
-                <div
+                <p
                   className="text-green-700 font-extrabold text-sm leading-none"
                   style={{ fontFamily: "'Cairo', sans-serif" }}
                 >
                   +12,000
-                </div>
-                <div
-                  className="text-gray-400 text-xs mt-0.5"
+                </p>
+                <p
+                  className="text-gray-400 text-[10px] mt-0.5"
                   style={{ fontFamily: "'Cairo', sans-serif" }}
                 >
                   طالب مسجّل
-                </div>
+                </p>
               </div>
             </motion.div>
           </motion.div>
         </div>
-
-        {/* Wave */}
-        <svg
-          className="absolute bottom-0 left-0 w-full pointer-events-none"
-          viewBox="0 0 1440 70"
-          preserveAspectRatio="none"
-          height="70"
-        >
-          <path d="M0,35 C480,70 960,0 1440,35 L1440,70 L0,70 Z" fill="white" />
-        </svg>
       </section>
 
       {/* ══════════════ FEATURES ══════════════ */}
       <section className="bg-white py-24 px-10" ref={featRef}>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={featInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="text-center"
         >
@@ -877,7 +823,7 @@ export default function MathHero() {
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 30 }}
-              animate={featInView ? { opacity: 1, y: 0 } : {}}
+              whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: i * 0.12 }}
               className="bg-gradient-to-br from-green-50 to-white border border-green-100 rounded-2xl p-8 text-center shadow-sm shadow-green-100 hover:shadow-lg hover:shadow-green-200 hover:-translate-y-1.5 transition-all"
             >
@@ -907,7 +853,6 @@ export default function MathHero() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6 }}
           className="text-center"
         >
@@ -935,7 +880,6 @@ export default function MathHero() {
               key={i}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.55, delay: i * 0.15 }}
               whileHover={{ y: -6 }}
               className={`bg-gradient-to-br ${lv.bg} rounded-2xl p-9 text-center shadow-md shadow-green-100 transition-all`}
@@ -993,7 +937,7 @@ export default function MathHero() {
         <section className="bg-white py-24 px-10" ref={testRef}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
-            animate={testInView ? { opacity: 1, y: 0 } : {}}
+            whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center"
           >
@@ -1015,55 +959,101 @@ export default function MathHero() {
             <div className="w-14 h-1 bg-gradient-to-r from-green-600 to-green-400 rounded-full mx-auto mt-3.5" />
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mt-12">
-            {feedbacks.map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                animate={testInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.5, delay: i * 0.13 }}
-                className="bg-gradient-to-br from-green-50 to-white border border-green-100 rounded-2xl p-7 shadow-sm shadow-green-100 hover:shadow-md hover:shadow-green-200 hover:-translate-y-1 transition-all"
-              >
-                <div className="flex gap-1 mb-4">
-                  {Array(t.rating)
-                    .fill(0)
-                    .map((_, j) => (
-                      <span key={j} className="text-yellow-400 text-base">
-                        ★
-                      </span>
-                    ))}
-                </div>
-                <p
-                  className="text-gray-600 text-sm leading-loose mb-5"
-                  style={{ fontFamily: "'Cairo', sans-serif" }}
+          <div className="py-8">
+            {/* Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {paginated.map((t, i) => (
+                <motion.div
+                  key={`${page}-${i}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: false, amount: 0.2 }} // allows repeat animation on scroll
+                  transition={{ duration: 0.5, delay: i * 0.1 }} // stagger effect
+                  className="bg-gradient-to-br from-green-50 to-white border border-green-100 rounded-2xl p-7 shadow-sm shadow-green-100 hover:shadow-md hover:shadow-green-200 hover:-translate-y-1 transition-all"
                 >
-                  "{t.text}"
-                </p>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white font-black text-base flex-shrink-0"
+                  <div className="flex gap-1 mb-4">
+                    {Array(t.rating)
+                      .fill(0)
+                      .map((_, j) => (
+                        <span key={j} className="text-yellow-400 text-base">
+                          ★
+                        </span>
+                      ))}
+                  </div>
+                  <p
+                    className="text-gray-600 text-sm leading-loose mb-5"
                     style={{ fontFamily: "'Cairo', sans-serif" }}
                   >
-                    {t.name[0]}
-                  </div>
-                  <div>
+                    {t.comment}
+                  </p>
+                  <div className="flex items-center gap-3">
                     <div
-                      className="font-extrabold text-gray-900 text-sm"
+                      className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white font-black text-base flex-shrink-0"
                       style={{ fontFamily: "'Cairo', sans-serif" }}
                     >
-                      {t.name}
+                      {t.name[0]}
                     </div>
-                    <div
-                      className="text-green-600 text-xs"
-                      style={{ fontFamily: "'Cairo', sans-serif" }}
-                    >
-                      {t.level}
+                    <div>
+                      <div
+                        className="font-extrabold text-gray-900 text-sm"
+                        style={{ fontFamily: "'Cairo', sans-serif" }}
+                      >
+                        {t.name}
+                      </div>
+                      <div
+                        className="text-green-600 text-xs"
+                        style={{ fontFamily: "'Cairo', sans-serif" }}
+                      >
+                        {t.level}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-center gap-3 mt-10">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
+                className="w-9 h-9 rounded-full border border-green-200 bg-white text-green-700 flex items-center justify-center hover:bg-green-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+              >
+                ‹
+              </button>
+
+              {Array.from({ length: totalPages }).map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setPage(idx)}
+                  className={`w-9 h-9 rounded-full text-sm font-bold transition-all shadow-sm border ${
+                    page === idx
+                      ? "bg-green-600 text-white border-green-600 scale-110 shadow-green-200"
+                      : "bg-white text-green-700 border-green-200 hover:bg-green-50"
+                  }`}
+                >
+                  {idx + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={page === totalPages - 1}
+                className="w-9 h-9 rounded-full border border-green-200 bg-white text-green-700 flex items-center justify-center hover:bg-green-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+              >
+                ›
+              </button>
+            </div>
+
+            {/* Page indicator */}
+            <p
+              className="text-center text-xs text-gray-400 mt-3"
+              style={{ fontFamily: "'Cairo', sans-serif" }}
+            >
+              صفحة {page + 1} من {totalPages}
+            </p>
           </div>
+
           <div className=" text-center mt-5">
             <button
               onClick={() => setShowModal(true)}
