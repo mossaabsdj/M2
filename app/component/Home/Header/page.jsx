@@ -415,7 +415,16 @@ function UserDropdown({
 }
 
 /** Mobile nav panel */
-function MobileNav({ config, theme, user, isOpen, onLogin, onLogout }) {
+function MobileNav({
+  config,
+  theme,
+  user,
+  isOpen,
+  onLogin,
+  onLogout,
+  signup,
+  setselectedNav,
+}) {
   const { nav, levels, cta, userMenu } = config;
 
   const mobLink = (
@@ -427,6 +436,7 @@ function MobileNav({ config, theme, user, isOpen, onLogin, onLogout }) {
   ) => (
     <motion.a
       href={href}
+      onClick={() => setselectedNav(label)}
       variants={itemFade}
       className="flex items-center gap-3 px-4 py-[11px] rounded-[11px] text-[0.88rem] font-medium no-underline"
       style={{ color: theme.muted }}
@@ -546,6 +556,7 @@ function MobileNav({ config, theme, user, isOpen, onLogin, onLogout }) {
                   {cta.login}
                 </motion.button>
                 <motion.button
+                  onClick={signup}
                   className="flex-1 py-2 rounded-[10px] text-sm font-bold text-white border-none cursor-pointer"
                   style={{
                     background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`,
@@ -602,6 +613,8 @@ export default function MathProfHeader({
   user = null,
   onLogin,
   onLogout,
+  signup,
+  setSelectedNav,
 }) {
   const { brand, theme, nav, levels, cta, userMenu } = config;
   const [levelsOpen, setLevelsOpen] = useState(false);
@@ -667,7 +680,7 @@ export default function MathProfHeader({
             {nav.map((item) => (
               <motion.a
                 key={item.label}
-                href={item.href}
+                onClick={() => setSelectedNav(item.label)}
                 className="text-[0.985rem] font-bold  px-4 py-[7px] rounded-[9px] no-underline transition-colors whitespace-nowrap"
                 style={{
                   color: item.active ? theme.primaryDark : theme.muted,
@@ -747,6 +760,7 @@ export default function MathProfHeader({
                     {cta.login}
                   </motion.button>
                   <motion.button
+                    onClick={signup}
                     className="bg-green-600 text-white border-0 rounded-xl px-5 py-2.5 font-bold text-sm cursor-pointer  hover:shadow-2xs hover:shadow-gray-500 transition-all"
                     whileHover={{ opacity: 0.88, y: -1 }}
                     whileTap={{ scale: 0.96 }}
@@ -864,7 +878,9 @@ export default function MathProfHeader({
         user={user}
         isOpen={mobileOpen}
         onLogin={onLogin}
+        setselectedNav={setSelectedNav}
         onLogout={onLogout}
+        signup={signup}
       />
     </header>
   );

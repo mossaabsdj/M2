@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 
 import Header from "@/app/component/admin/navbar/page";
-import ProductPage from "@/app/component/admin/products/page";
+import Footer from "@/app/component/Home/Footer/page";
 import ParametrePage from "@/app/component/admin/parametre/page";
+import UserManagement from "@/app/component/admin/UserManagment/page";
 export default function Admin() {
-  const [currentPage, setCurrentPage] = useState("Paramètre");
+  const [currentPage, setCurrentPage] = useState("الإعدادات");
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -16,8 +17,10 @@ export default function Admin() {
     <>
       <Header onNavChange={setCurrentPage} currentPage={currentPage} />
 
-      {currentPage === "Products" && <ProductPage />}
-      {currentPage === "Paramètre" && <ParametrePage />}
+      {currentPage === "الإعدادات" && <ParametrePage />}
+      {currentPage === "المستخدمون" && <UserManagement />}
+
+      <Footer />
     </>
   );
 }

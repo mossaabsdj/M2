@@ -1,6 +1,5 @@
 import bcrypt from "bcryptjs";
 import sendEmail from "@/lib/sendEmail";
-
 import prisma from "@/lib/prisma";
 
 function generateOTP() {
@@ -12,23 +11,48 @@ async function hashOTP(otp) {
 }
 
 async function POST(req) {
-  const body = await req.json();
-  const { email, password } = body;
+  try {
+    const body = await req.json();
+    const { email } = body;
 
-  const otp = generateOTP();
-  const otpHash = await hashOTP(otp);
+    // Check for required fields
+    if (!email) {
+      return new Response(JSON.stringify({ error: "Missing email " }), {
+        status: 400,
+      });
+    }
 
-  await prisma.verificationToken.create({
-    data: {
-      email,
-      tokenHash: otpHash,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-    },
-  });
+    // Generate OTP
+    const otp = generateOTP();
+    const otpHash = await hashOTP(otp);
 
-  await sendEmail(email, otp);
+    // Save OTP in DB
+    await prisma.verificationToken.create({
+      data: {
+        email,
+        tokenHash: otpHash,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      },
+    });
 
-  return new Response(JSON.stringify({ message: "OTP sent" }));
+    // Send OTP email
+    await sendEmail(email, otp);
+
+    return new Response(JSON.stringify({ message: "OTP sent successfully" }), {
+      status: 200,
+    });
+  } catch (error) {
+    console.error("POST /send-otp error:", error);
+
+    // Return detailed error
+    return new Response(
+      JSON.stringify({
+        error: "Failed to send OTP",
+        details: error.message || error,
+      }),
+      { status: 500 },
+    );
+  }
 }
 
-module.exports = { POST };
+export { POST };

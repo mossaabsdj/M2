@@ -959,51 +959,67 @@ export default function MathHero() {
             <div className="w-14 h-1 bg-gradient-to-r from-green-600 to-green-400 rounded-full mx-auto mt-3.5" />
           </motion.div>
 
-          <div className="py-8">
+          <div className="py-12">
             {/* Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
               {paginated.map((t, i) => (
                 <motion.div
                   key={`${page}-${i}`}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: false, amount: 0.2 }} // allows repeat animation on scroll
-                  transition={{ duration: 0.5, delay: i * 0.1 }} // stagger effect
-                  className="bg-gradient-to-br from-green-50 to-white border border-green-100 rounded-2xl p-7 shadow-sm shadow-green-100 hover:shadow-md hover:shadow-green-200 hover:-translate-y-1 transition-all"
+                  viewport={{ once: false, amount: 0.2 }}
+                  transition={{ duration: 0.4, delay: i * 0.08 }}
+                  className="relative group flex flex-col gap-4 rounded-3xl p-6 overflow-hidden
+                   bg-white border border-gray-100
+                   shadow-[0_2px_16px_rgba(0,0,0,0.06)]
+                   hover:shadow-[0_8px_32px_rgba(5,150,105,0.12)]
+                   hover:-translate-y-1 transition-all duration-300"
+                  style={{ fontFamily: "'Cairo', sans-serif" }}
                 >
-                  <div className="flex gap-1 mb-4">
+                  {/* Top accent line */}
+                  <div className="absolute top-0 left-6 right-6 h-0.5 rounded-full bg-gradient-to-r from-green-400 to-emerald-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                  {/* Big decorative quote */}
+                  <span
+                    className="absolute top-3 left-4 text-7xl leading-none select-none pointer-events-none font-black text-green-100"
+                    style={{ fontFamily: "Georgia, serif" }}
+                  >
+                    "
+                  </span>
+
+                  {/* Stars */}
+                  <div className="flex gap-0.5 relative z-10">
                     {Array(t.rating)
                       .fill(0)
                       .map((_, j) => (
-                        <span key={j} className="text-yellow-400 text-base">
+                        <span key={j} className="text-amber-400 text-base">
                           ★
                         </span>
                       ))}
                   </div>
-                  <p
-                    className="text-gray-600 text-sm leading-loose mb-5"
-                    style={{ fontFamily: "'Cairo', sans-serif" }}
-                  >
+
+                  {/* Comment */}
+                  <p className="text-gray-500 text-sm leading-loose relative z-10 flex-1">
                     {t.comment}
                   </p>
+
+                  {/* Divider */}
+                  <div className="h-px bg-gray-100" />
+
+                  {/* Author */}
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white font-black text-base flex-shrink-0"
-                      style={{ fontFamily: "'Cairo', sans-serif" }}
+                      className="w-10 h-10 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-700
+                          flex items-center justify-center text-white font-black text-sm flex-shrink-0
+                          shadow-[0_4px_10px_rgba(5,150,105,0.3)]"
                     >
                       {t.name[0]}
                     </div>
                     <div>
-                      <div
-                        className="font-extrabold text-gray-900 text-sm"
-                        style={{ fontFamily: "'Cairo', sans-serif" }}
-                      >
+                      <div className="font-bold text-gray-900 text-sm">
                         {t.name}
                       </div>
-                      <div
-                        className="text-green-600 text-xs"
-                        style={{ fontFamily: "'Cairo', sans-serif" }}
-                      >
+                      <div className="text-green-600 text-xs font-semibold">
                         {t.level}
                       </div>
                     </div>
@@ -1013,33 +1029,44 @@ export default function MathHero() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-center gap-3 mt-10">
+            <div
+              className="flex items-center justify-center gap-2 mt-12"
+              style={{ fontFamily: "'Cairo', sans-serif" }}
+            >
               <button
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="w-9 h-9 rounded-full border border-green-200 bg-white text-green-700 flex items-center justify-center hover:bg-green-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+                className="w-9 h-9 rounded-xl border border-gray-200 bg-white text-green-700 text-lg
+                 flex items-center justify-center
+                 hover:bg-green-50 hover:border-green-300
+                 disabled:opacity-25 disabled:cursor-not-allowed
+                 transition-all shadow-sm"
               >
                 ‹
               </button>
 
-              {Array.from({ length: totalPages }).map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setPage(idx)}
-                  className={`w-9 h-9 rounded-full text-sm font-bold transition-all shadow-sm border ${
-                    page === idx
-                      ? "bg-green-600 text-white border-green-600 scale-110 shadow-green-200"
-                      : "bg-white text-green-700 border-green-200 hover:bg-green-50"
-                  }`}
-                >
-                  {idx + 1}
-                </button>
-              ))}
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalPages }).map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setPage(idx)}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      page === idx
+                        ? "w-7 bg-green-600 shadow-[0_0_8px_rgba(5,150,105,0.4)]"
+                        : "w-2 bg-gray-200 hover:bg-green-200"
+                    }`}
+                  />
+                ))}
+              </div>
 
               <button
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={page === totalPages - 1}
-                className="w-9 h-9 rounded-full border border-green-200 bg-white text-green-700 flex items-center justify-center hover:bg-green-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+                className="w-9 h-9 rounded-xl border border-gray-200 bg-white text-green-700 text-lg
+                 flex items-center justify-center
+                 hover:bg-green-50 hover:border-green-300
+                 disabled:opacity-25 disabled:cursor-not-allowed
+                 transition-all shadow-sm"
               >
                 ›
               </button>
@@ -1047,10 +1074,10 @@ export default function MathHero() {
 
             {/* Page indicator */}
             <p
-              className="text-center text-xs text-gray-400 mt-3"
+              className="text-center text-xs text-gray-300 mt-3"
               style={{ fontFamily: "'Cairo', sans-serif" }}
             >
-              صفحة {page + 1} من {totalPages}
+              {page + 1} / {totalPages}
             </p>
           </div>
 
