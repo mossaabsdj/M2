@@ -38,9 +38,74 @@ model Compte {
   Password  String
   role      Role      @default(USER)
   createdAt DateTime  @default(now())
+  // Link to Niveau
+  niveauId  Int?
+  niveau    Niveau?   @relation(fields: [niveauId], references: [id])
 }
 enum Role {
   ADMIN
   USER
  
+}
+
+
+
+
+//////////////////////////////////////////////////////
+// MODELS
+//////////////////////////////////////////////////////
+
+model Niveau {
+  id      Int         @id @default(autoincrement())
+  code    String @unique
+  label   String
+ 
+  courses Course[]
+comptes Compte[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Course {
+  id        Int       @id @default(autoincrement())
+  title     String
+
+  niveauId  Int
+  niveau    Niveau    @relation(fields: [niveauId], references: [id], onDelete: Cascade)
+  videoUrl   String?
+  resumeUrl  String?
+
+  chapters  Chapter[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Chapter {
+  id         Int      @id @default(autoincrement())
+  title      String
+  videoUrl   String?
+  resumeUrl  String?
+
+  courseId   Int
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  series     Series[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Series {
+  id          Int      @id @default(autoincrement())
+  label       String
+  serieUrl    String?
+  solutionUrl String?
+  videoUrl   String?
+
+  chapterId   Int
+  chapter     Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

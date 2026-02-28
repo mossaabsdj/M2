@@ -1,4 +1,5 @@
 "use client";
+import { useSession } from "next-auth/react";
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,7 +12,7 @@ import {
   Layers,
   GraduationCap,
 } from "lucide-react";
-
+import { getNiveauFullTree } from "@/lib/Client/GetCoursesbyNiveaux";
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 function getLinkType(url) {
   if (!url) return null;
@@ -399,7 +400,8 @@ function PlaceholderSection({ section }) {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function CoursesPage() {
   const [activeSection, setActiveSection] = useState("courses");
-
+  const { data: session } = useSession();
+  console.log(session.user?.niveau || null);
   const current = SECTIONS.find((s) => s.id === activeSection);
 
   const handleNav = (id) => {

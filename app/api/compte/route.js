@@ -17,6 +17,7 @@ export async function GET(req) {
 
   const compte = await prisma.Compte.findUnique({
     where: { email },
+    include: { niveau: true }, // include linked niveau
   });
 
   if (!compte) {
@@ -30,13 +31,20 @@ export async function GET(req) {
     country: compte.country,
     role: compte.role,
     createdAt: compte.createdAt,
+    niveau: compte.niveau
+      ? {
+          id: compte.niveau.id,
+          label: compte.niveau.label,
+          code: compte.niveau.code,
+        }
+      : null, // return null if no niveau assigned
   });
 }
 
-// ✅ PUT — Update compte info
+// ✅ PUT — Update compte info (including niveau)
 export async function PUT(req) {
   try {
-    const { email, newEmail, fullName, phone, country, password } =
+    const { email, newEmail, fullName, phone, country, password, niveauId } =
       await req.json();
 
     if (!email) {
@@ -77,10 +85,26 @@ export async function PUT(req) {
       dataToUpdate.email = newEmail;
     }
 
+    // 🔗 Update niveau if provided
+    if (niveauId !== undefined) {
+      // Optional: check if niveau exists
+      const niveauExists = await prisma.Niveau.findUnique({
+        where: { id: Number(niveauId) },
+      });
+      if (!niveauExists) {
+        return NextResponse.json(
+          { error: "Niveau not found" },
+          { status: 404 },
+        );
+      }
+      dataToUpdate.niveauId = Number(niveauId);
+    }
+
     // ✅ Perform update
     const updatedCompte = await prisma.Compte.update({
       where: { email },
       data: dataToUpdate,
+      include: { niveau: true }, // include niveau in response
     });
 
     return NextResponse.json({
@@ -91,6 +115,13 @@ export async function PUT(req) {
         phone: updatedCompte.phone,
         country: updatedCompte.country,
         role: updatedCompte.role,
+        niveau: updatedCompte.niveau
+          ? {
+              id: updatedCompte.niveau.id,
+              label: updatedCompte.niveau.label,
+              code: updatedCompte.niveau.code,
+            }
+          : null,
       },
     });
   } catch (error) {

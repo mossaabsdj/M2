@@ -1,7 +1,7 @@
 "use client";
 import { Eye, EyeOff } from "lucide-react";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaFacebookF, FaTwitter, FaInstagram } from "react-icons/fa";
 import { countries } from "@/data/countries";
 import Swal from "sweetalert2";
@@ -9,6 +9,7 @@ import { signIn } from "next-auth/react";
 import OtpModal from "@/app/component/OtpModal";
 import ForgotOtpModal from "@/app/component/OtpModalForgot";
 import Progression from "@/app/component/Proogression/page";
+import { getAllNiveaux } from "@/lib/niveauApi";
 
 const COLORS = {
   formBorder: "border-green-500",
@@ -85,16 +86,25 @@ export default function FlipAuthPages() {
 
   const [resetEmail, setResetEmail] = useState("");
 
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [niveaux, setNiveaux] = useState([]);
+
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({
     fullName: "",
     email: "",
     phone: "",
     country: "",
+    niveauId: "",
     password: "",
     confirmPassword: "",
   });
+
+  // Fetch niveaux on mount
+  useEffect(() => {
+    getAllNiveaux()
+      .then((data) => setNiveaux(data))
+      .catch(() => setNiveaux([]));
+  }, []);
 
   const handleLoginChange = (field) => (e) => {
     setLoginData((prev) => ({ ...prev, [field]: e.target.value }));
@@ -161,14 +171,22 @@ export default function FlipAuthPages() {
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    const { fullName, email, phone, country, password, confirmPassword } =
-      registerData;
+    const {
+      fullName,
+      email,
+      phone,
+      country,
+      niveauId,
+      password,
+      confirmPassword,
+    } = registerData;
 
     if (
       !fullName ||
       !email ||
       !phone ||
       !country ||
+      !niveauId ||
       !password ||
       !confirmPassword
     ) {
@@ -240,6 +258,7 @@ export default function FlipAuthPages() {
       email,
       phone,
       country,
+      niveauId: Number(niveauId),
       password,
       confirmPassword,
     });
@@ -255,7 +274,7 @@ export default function FlipAuthPages() {
     <>
       {showResetPassword && (
         <div
-          className="  fixed inset-0 z-[1000] bg-opacity-40 backdrop-blur-md flex justify-center items-center"
+          className="fixed inset-0 z-[1000] bg-opacity-40 backdrop-blur-md flex justify-center items-center"
           dir="rtl"
         >
           <div className="bg-white p-10 rounded-3xl w-[90%] max-w-xl shadow-2xl transform scale-105">
@@ -399,7 +418,7 @@ export default function FlipAuthPages() {
                   </div>
                 </div>
 
-                {/* Welcome Section - Left (RTL: appears on right visually) */}
+                {/* Welcome Section */}
                 <WelcomeSection
                   title="مرحبًا بعودتك!"
                   description="أدر طلباتك، استكشف منتجات جديدة، وتواصل مع مزارعك المفضلة — كل ذلك من مكان واحد."
@@ -450,6 +469,8 @@ export default function FlipAuthPages() {
                           onChange={handleRegisterChange("email")}
                           className="w-full"
                         />
+
+                        {/* Country */}
                         <select
                           value={registerData.country}
                           onChange={handleRegisterChange("country")}
@@ -464,6 +485,7 @@ export default function FlipAuthPages() {
                             </option>
                           ))}
                         </select>
+
                         <FormInput
                           type="tel"
                           placeholder="رقم الهاتف"
@@ -473,6 +495,23 @@ export default function FlipAuthPages() {
                           maxLength={12}
                         />
 
+                        {/* ── Niveau Picker ── */}
+                        <select
+                          value={registerData.niveauId}
+                          onChange={handleRegisterChange("niveauId")}
+                          dir="rtl"
+                          className={`h-14 px-4 rounded-lg border-2 ${COLORS.formBorder} ${COLORS.formFocus} text-gray-800 outline-none transition w-full text-right col-span-1 md:col-span-2`}
+                          required
+                        >
+                          <option value="">اختر المستوى الدراسي</option>
+                          {niveaux.map((n) => (
+                            <option key={n.id} value={n.id}>
+                              {n.label}
+                            </option>
+                          ))}
+                        </select>
+
+                        {/* Password */}
                         <div className="relative w-full">
                           <FormInput
                             type={showPassword ? "text" : "password"}
@@ -481,7 +520,6 @@ export default function FlipAuthPages() {
                             onChange={handleRegisterChange("password")}
                             className="w-full pl-10"
                           />
-                          {/* Eye icon on LEFT side for RTL */}
                           <button
                             type="button"
                             onMouseDown={() => setShowPassword(true)}
@@ -499,6 +537,7 @@ export default function FlipAuthPages() {
                           </button>
                         </div>
 
+                        {/* Confirm Password */}
                         <div className="relative w-full">
                           <FormInput
                             type={showConfirmPassword ? "text" : "password"}
@@ -507,7 +546,6 @@ export default function FlipAuthPages() {
                             onChange={handleRegisterChange("confirmPassword")}
                             className="w-full pl-10"
                           />
-                          {/* Eye icon on LEFT side for RTL */}
                           <button
                             type="button"
                             onMouseDown={() => setShowConfirmPassword(true)}

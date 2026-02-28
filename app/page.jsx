@@ -14,6 +14,7 @@ export default function Home() {
   return (
     <div>
       <Header
+        selectedNav={NavSelected}
         onLogin={() => {
           route.push("/Login");
         }}

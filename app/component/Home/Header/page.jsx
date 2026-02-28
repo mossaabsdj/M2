@@ -29,7 +29,7 @@ const DEFAULT_CONFIG = {
     borderMd: "#86efac", // Medium border (#86efac)
   },
   nav: [
-    { label: "الرئيسية", href: "#", active: true },
+    { label: "الرئيسية", href: "#" },
     { label: "الدروس", href: "#" },
     { label: "التمارين", href: "#" },
     { label: "تواصل", href: "#" },
@@ -615,6 +615,7 @@ export default function MathProfHeader({
   onLogout,
   signup,
   setSelectedNav,
+  selectedNav,
 }) {
   const { brand, theme, nav, levels, cta, userMenu } = config;
   const [levelsOpen, setLevelsOpen] = useState(false);
@@ -677,25 +678,29 @@ export default function MathProfHeader({
 
           {/* ── Desktop Nav ── */}
           <nav className="hidden lg:flex items-center gap-0.5">
-            {nav.map((item) => (
-              <motion.a
-                key={item.label}
-                onClick={() => setSelectedNav(item.label)}
-                className="text-[0.985rem] font-bold  px-4 py-[7px] rounded-[9px] no-underline transition-colors whitespace-nowrap"
-                style={{
-                  color: item.active ? theme.primaryDark : theme.muted,
-                  background: item.active ? theme.primaryLight : "transparent",
-                  fontWeight: item.active ? 600 : 500,
-                }}
-                whileHover={{
-                  backgroundColor: theme.primaryLight,
-                  color: theme.primaryDark,
-                }}
-                whileTap={{ scale: 0.97 }}
-              >
-                {item.label}
-              </motion.a>
-            ))}
+            {nav.map((item) => {
+              const isActive = selectedNav === item.label;
+              console.log(isActive + selectedNav + item.label);
+              return (
+                <motion.button
+                  key={item.label}
+                  onClick={() => setSelectedNav(item.label)}
+                  className="text-[0.985rem] font-bold px-4 py-[7px] rounded-[9px] no-underline transition-colors whitespace-nowrap"
+                  style={{
+                    color: isActive ? theme.primaryDark : theme.muted,
+                    background: isActive ? theme.primaryLight : "transparent",
+                    fontWeight: isActive ? 600 : 500,
+                  }}
+                  whileHover={{
+                    backgroundColor: theme.primaryLight,
+                    color: theme.primaryDark,
+                  }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  {item.label}
+                </motion.button>
+              );
+            })}
 
             {/* Levels Dropdown */}
             <div className="relative" ref={levelsRef}>

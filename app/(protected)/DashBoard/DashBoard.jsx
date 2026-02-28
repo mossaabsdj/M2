@@ -8,8 +8,9 @@ import Header from "@/app/component/admin/navbar/page";
 import Footer from "@/app/component/Home/Footer/page";
 import ParametrePage from "@/app/component/admin/parametre/page";
 import UserManagement from "@/app/component/admin/UserManagment/page";
+import CoursesPage from "@/app/component/admin/Courses/page";
 export default function Admin() {
-  const [currentPage, setCurrentPage] = useState("الإعدادات");
+  const [currentPage, setCurrentPage] = useState("المستويات والدروس");
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -19,6 +20,7 @@ export default function Admin() {
 
       {currentPage === "الإعدادات" && <ParametrePage />}
       {currentPage === "المستخدمون" && <UserManagement />}
+      {currentPage === "المستويات والدروس" && <CoursesPage />}
 
       <Footer />
     </>

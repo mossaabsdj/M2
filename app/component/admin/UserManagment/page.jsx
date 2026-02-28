@@ -1,16 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  MoreVertical,
-  UserPlus,
-} from "lucide-react";
+import { Search, Edit, Trash2, MoreVertical, UserPlus } from "lucide-react";
 import Swal from "sweetalert2";
 import { useSession } from "next-auth/react";
+import { getAllNiveaux, getNiveauById } from "@/lib/niveauApi";
 
 import {
   Dialog,
@@ -40,6 +34,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
+  const [niveaux, setNiveaux] = useState([]);
   const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
 
@@ -54,6 +49,7 @@ export default function UserManagement() {
     phone: "",
     country: "",
     role: "CLIENT",
+    niveauId: "",
     password: "",
   });
 
@@ -63,6 +59,15 @@ export default function UserManagement() {
     }
   }, [session]);
 
+  useEffect(() => {
+    getAllNiveaux()
+      .then((data) => setNiveaux(data))
+      .catch(() => setNiveaux([]));
+  }, []);
+  useEffect(() => {
+    console.log(niveaux);
+  }, [niveaux]);
+
   const fetchUsers = async (currentEmail) => {
     try {
       setLoading(true);
@@ -70,7 +75,6 @@ export default function UserManagement() {
         `/api/users?email=${encodeURIComponent(currentEmail)}`,
       );
       const data = await res.json();
-
       if (res.ok) setUsers(data);
       else throw new Error(data.error || "فشل في جلب المستخدمين");
     } catch (err) {
@@ -78,6 +82,14 @@ export default function UserManagement() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // The Prisma relation returns user.niveau directly — use its label
+  // getNiveauById is used to lazily resolve a label when needed by id
+  const getNiveauLabel = async (niveauId) => {
+    if (!niveauId) return "-";
+    const n = await getNiveauById(niveauId);
+    return n?.label || "-";
   };
 
   const filteredUsers = users?.filter(
@@ -95,6 +107,7 @@ export default function UserManagement() {
       phone: "",
       country: "",
       role: "CLIENT",
+      niveauId: "",
       password: "",
     });
     setIsDialogOpen(true);
@@ -108,6 +121,11 @@ export default function UserManagement() {
       phone: user.phone || "",
       country: user.country || "",
       role: user.role,
+      niveauId: user.niveauId
+        ? String(user.niveauId)
+        : user.niveau?.id
+          ? String(user.niveau.id)
+          : "",
       password: "",
     });
     setIsDialogOpen(true);
@@ -124,9 +142,7 @@ export default function UserManagement() {
       const res = await fetch(`/api/users?id=${userToDelete.id}`, {
         method: "DELETE",
       });
-
       const data = await res.json();
-
       if (res.ok) {
         Swal.fire("تم الحذف!", "تم حذف المستخدم بنجاح.", "success");
         fetchUsers(session.user.email);
@@ -147,23 +163,19 @@ export default function UserManagement() {
       Swal.fire("تحذير", "الاسم الكامل مطلوب.", "warning");
       return;
     }
-
     if (!formData.email.trim()) {
       Swal.fire("تحذير", "البريد الإلكتروني مطلوب.", "warning");
       return;
     }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       Swal.fire("تحذير", "يرجى إدخال بريد إلكتروني صحيح.", "warning");
       return;
     }
-
     if (!formData.role) {
       Swal.fire("تحذير", "دور المستخدم مطلوب.", "warning");
       return;
     }
-
     if (!currentUser && (!formData.password || formData.password.length < 8)) {
       Swal.fire(
         "تحذير",
@@ -172,7 +184,6 @@ export default function UserManagement() {
       );
       return;
     }
-
     if (formData.phone && !/^\+?\d{6,15}$/.test(formData.phone)) {
       Swal.fire(
         "تحذير",
@@ -185,14 +196,17 @@ export default function UserManagement() {
     try {
       setLoading(true);
       const method = currentUser ? "PUT" : "POST";
-      const body = currentUser ? { id: currentUser.id, ...formData } : formData;
+      const body = {
+        ...(currentUser ? { id: currentUser.id } : {}),
+        ...formData,
+        niveauId: formData.niveauId ? Number(formData.niveauId) : null,
+      };
 
       const res = await fetch("/api/users", {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-
       const data = await res.json();
 
       if (res.ok) {
@@ -213,13 +227,10 @@ export default function UserManagement() {
     }
   };
 
-  const getRoleBadgeColor = (role) => {
-    return role === "ADMIN" ? "bg-black text-white" : "bg-gray-200 text-black";
-  };
+  const getRoleBadgeColor = (role) =>
+    role === "ADMIN" ? "bg-black text-white" : "bg-gray-200 text-black";
 
-  const getRoleLabel = (role) => {
-    return role === "ADMIN" ? "مدير" : "عميل";
-  };
+  const getRoleLabel = (role) => (role === "ADMIN" ? "مدير" : "عميل");
 
   return (
     <div
@@ -230,7 +241,7 @@ export default function UserManagement() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');`}</style>
 
       <div className="max-w-full mx-auto">
-        {/* الترويسة */}
+        {/* Header */}
         <div className="mb-8 flex flex-col items-center justify-center">
           <h1 className="text-3xl font-bold text-black mb-2">
             إدارة المستخدمين
@@ -238,7 +249,7 @@ export default function UserManagement() {
           <p className="text-gray-600">إدارة مستخدمي التطبيق وأدوارهم</p>
         </div>
 
-        {/* شريط الإجراءات */}
+        {/* Actions bar */}
         <div className="flex flex-col sm:flex-row justify-between gap-4 px-5 mb-6">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -259,7 +270,7 @@ export default function UserManagement() {
           </Button>
         </div>
 
-        {/* جدول المستخدمين */}
+        {/* Table */}
         <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -276,6 +287,9 @@ export default function UserManagement() {
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-semibold text-black uppercase tracking-wider">
                     الدولة
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-black uppercase tracking-wider">
+                    المستوى
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-semibold text-black uppercase tracking-wider">
                     الدور
@@ -302,6 +316,15 @@ export default function UserManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-right">
                       {user.country || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                      {user.niveau?.label ? (
+                        <Badge className="bg-emerald-100 text-emerald-800 border-0">
+                          {user.niveau.label}
+                        </Badge>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
                       <Badge className={getRoleBadgeColor(user.role)}>
@@ -357,7 +380,7 @@ export default function UserManagement() {
           </div>
         )}
 
-        {/* نافذة إضافة / تعديل مستخدم */}
+        {/* Add / Edit Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent
             className="bg-white border-gray-200 sm:max-w-[500px]"
@@ -376,13 +399,12 @@ export default function UserManagement() {
                   : "أدخل التفاصيل لإنشاء حساب مستخدم جديد."}
               </DialogDescription>
             </DialogHeader>
+
             <div className="grid gap-4 py-4">
+              {/* Full Name */}
               <div className="grid gap-2">
-                <Label htmlFor="fullName" className="text-black text-right">
-                  الاسم الكامل *
-                </Label>
+                <Label className="text-black text-right">الاسم الكامل *</Label>
                 <Input
-                  id="fullName"
                   value={formData.fullName}
                   onChange={(e) =>
                     setFormData({ ...formData, fullName: e.target.value })
@@ -390,12 +412,13 @@ export default function UserManagement() {
                   className="text-right border-gray-300 focus:border-black focus:ring-black"
                 />
               </div>
+
+              {/* Email */}
               <div className="grid gap-2">
-                <Label htmlFor="email" className="text-black text-right">
+                <Label className="text-black text-right">
                   البريد الإلكتروني *
                 </Label>
                 <Input
-                  id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) =>
@@ -404,12 +427,11 @@ export default function UserManagement() {
                   className="text-right border-gray-300 focus:border-black focus:ring-black"
                 />
               </div>
+
+              {/* Phone */}
               <div className="grid gap-2">
-                <Label htmlFor="phone" className="text-black text-right">
-                  الهاتف
-                </Label>
+                <Label className="text-black text-right">الهاتف</Label>
                 <Input
-                  id="phone"
                   value={formData.phone}
                   onChange={(e) =>
                     setFormData({ ...formData, phone: e.target.value })
@@ -417,12 +439,11 @@ export default function UserManagement() {
                   className="text-right border-gray-300 focus:border-black focus:ring-black"
                 />
               </div>
+
+              {/* Country */}
               <div className="grid gap-2">
-                <Label htmlFor="country" className="text-black text-right">
-                  الدولة
-                </Label>
+                <Label className="text-black text-right">الدولة</Label>
                 <Input
-                  id="country"
                   value={formData.country}
                   onChange={(e) =>
                     setFormData({ ...formData, country: e.target.value })
@@ -430,10 +451,38 @@ export default function UserManagement() {
                   className="text-right border-gray-300 focus:border-black focus:ring-black"
                 />
               </div>
+
+              {/* Niveau */}
               <div className="grid gap-2">
-                <Label htmlFor="role" className="text-black text-right">
-                  الدور *
-                </Label>
+                <Label className="text-black text-right">المستوى الدراسي</Label>
+                <Select
+                  value={formData.niveauId}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, niveauId: value })
+                  }
+                >
+                  <SelectTrigger
+                    className="border-gray-300 focus:border-black focus:ring-black text-right"
+                    style={{ direction: "rtl" }}
+                  >
+                    <SelectValue placeholder="اختر المستوى" />
+                  </SelectTrigger>
+                  <SelectContent
+                    className="bg-white border-gray-200"
+                    style={{ direction: "rtl" }}
+                  >
+                    {niveaux?.map((n) => (
+                      <SelectItem key={n.id} value={String(n.id)}>
+                        {n.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Role */}
+              <div className="grid gap-2">
+                <Label className="text-black text-right">الدور *</Label>
                 <Select
                   value={formData.role}
                   onValueChange={(value) =>
@@ -455,13 +504,12 @@ export default function UserManagement() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Password (add only) */}
               {!currentUser && (
                 <div className="grid gap-2">
-                  <Label htmlFor="password" className="text-black text-right">
-                    كلمة المرور *
-                  </Label>
+                  <Label className="text-black text-right">كلمة المرور *</Label>
                   <Input
-                    id="password"
                     type="password"
                     value={formData.password}
                     onChange={(e) =>
@@ -472,6 +520,7 @@ export default function UserManagement() {
                 </div>
               )}
             </div>
+
             <DialogFooter className="flex-row-reverse sm:flex-row-reverse gap-2">
               <Button
                 onClick={handleSubmit}
@@ -491,7 +540,7 @@ export default function UserManagement() {
           </DialogContent>
         </Dialog>
 
-        {/* نافذة تأكيد الحذف */}
+        {/* Delete Confirm Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent
             className="bg-white border-gray-200"

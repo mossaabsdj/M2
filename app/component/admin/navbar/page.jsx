@@ -26,7 +26,7 @@ const TEXTS = {
   navItemsAdmin: [
     { label: "المنتجات", href: "/admin/products" },
     { label: "الطلبات", href: "/admin/commande" },
-    { label: "المزارع", href: "/admin/farms" },
+    { label: "المستويات والدروس", href: "/admin/Courses" },
     { label: "المستخدمون", href: "/admin/Users" },
     { label: "الإعدادات", href: "/admin/parametre" },
   ],
