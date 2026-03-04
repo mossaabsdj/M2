@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   getAllNiveaux,
@@ -24,6 +24,7 @@ import {
   deleteSeries,
   updateSeries,
 } from "@/lib/seriesApi";
+import uploadFileToCloudinary from "@/lib/Cloudinry";
 
 import {
   BookOpen,
@@ -48,6 +49,8 @@ import {
   Loader2,
   Menu,
   Filter,
+  Upload,
+  File,
 } from "lucide-react";
 
 // ─── Theme ───────────────────────────────────────────────────────────────────
@@ -74,6 +77,9 @@ const THEMES = {
     filterInactive: "bg-[#F0FDF4] text-[#166534] hover:bg-[#DCFCE7]",
     mobileNav: "bg-white border-t border-[#E5E7EB]",
     overlay: "bg-black/40",
+    uploadArea:
+      "bg-[#F0FDF4] border-2 border-dashed border-[#86EFAC] hover:border-[#16A34A]",
+    uploadAreaActive: "bg-[#DCFCE7] border-[#16A34A]",
   },
   dark: {
     bg: "bg-[#0F172A]",
@@ -97,6 +103,9 @@ const THEMES = {
     filterInactive: "bg-[#052E16] text-[#86EFAC] hover:bg-[#14532D]",
     mobileNav: "bg-[#111827] border-t border-[#1F2937]",
     overlay: "bg-black/60",
+    uploadArea:
+      "bg-[#052E16] border-2 border-dashed border-[#166534] hover:border-[#22C55E]",
+    uploadAreaActive: "bg-[#14532D] border-[#22C55E]",
   },
 };
 
@@ -126,6 +135,170 @@ const api = {
     await deleteSeries(id);
     return { ok: true };
   },
+};
+
+// ─── File Upload Field ────────────────────────────────────────────────────────
+/**
+ * FileUploadField
+ * Props:
+ *  - label: string
+ *  - currentUrl: string | null  (existing URL from DB, shown when no new file picked)
+ *  - onUploaded: (url: string) => void  (called after successful Cloudinary upload)
+ *  - onClear: () => void  (called when user removes the file/url)
+ *  - accept: string  (e.g. "application/pdf,image/*")
+ *  - t: theme object
+ */
+const FileUploadField = ({
+  label,
+  currentUrl,
+  onUploaded,
+  onClear,
+  accept = "*/*",
+  t,
+}) => {
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [dragOver, setDragOver] = useState(false);
+  const [localFileName, setLocalFileName] = useState(null);
+
+  const handleFile = async (file) => {
+    if (!file) return;
+    setLocalFileName(file.name);
+    setUploading(true);
+    setProgress(0);
+    try {
+      const result = await uploadFileToCloudinary(file, setProgress);
+      onUploaded(result.url);
+    } catch {
+      setLocalFileName(null);
+    } finally {
+      setUploading(false);
+      setProgress(0);
+    }
+  };
+
+  const handleChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
+  };
+
+  const displayUrl = currentUrl;
+  const fileName =
+    localFileName || (displayUrl ? displayUrl.split("/").pop() : null);
+
+  const handleClear = () => {
+    setLocalFileName(null);
+    onClear();
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      {label && (
+        <label className="text-xs font-medium opacity-70">{label}</label>
+      )}
+
+      {/* Show current file if exists */}
+      {displayUrl && !uploading && (
+        <div
+          className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs ${t.tag} border ${t.divider}`}
+        >
+          <button
+            onClick={handleClear}
+            className="text-red-500 hover:text-red-700 flex-shrink-0"
+          >
+            <X size={13} />
+          </button>
+          <a
+            href={displayUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="truncate hover:underline flex-1 text-right"
+          >
+            {fileName || "عرض الملف"}
+          </a>
+          <File size={13} className="flex-shrink-0 opacity-60" />
+        </div>
+      )}
+
+      {/* Upload area — shown when no file or to replace */}
+      {!displayUrl && (
+        <div
+          onClick={() => !uploading && inputRef.current?.click()}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          className={`
+            relative flex flex-col items-center justify-center gap-2 px-4 py-4 rounded-xl cursor-pointer transition-all duration-150 text-center
+            ${dragOver ? t.uploadAreaActive : t.uploadArea}
+            ${uploading ? "pointer-events-none" : ""}
+          `}
+        >
+          {uploading ? (
+            <>
+              <Loader2 size={18} className={`${t.accentText} animate-spin`} />
+              <span className={`text-xs ${t.textMuted}`}>
+                جارٍ الرفع... {progress}%
+              </span>
+              <div
+                className={`w-full h-1.5 rounded-full bg-black/10 overflow-hidden`}
+              >
+                <div
+                  className={`h-full ${t.accentBg} transition-all duration-200`}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <Upload size={18} className={t.accentText} />
+              <span className={`text-xs ${t.textMuted}`}>
+                اسحب الملف هنا أو{" "}
+                <span className={`${t.accentText} font-medium`}>
+                  اضغط للاختيار
+                </span>
+              </span>
+            </>
+          )}
+          <input
+            ref={inputRef}
+            type="file"
+            accept={accept}
+            className="hidden"
+            onChange={handleChange}
+          />
+        </div>
+      )}
+
+      {/* Replace button when file already uploaded */}
+      {displayUrl && !uploading && (
+        <button
+          onClick={() => inputRef.current?.click()}
+          className={`text-xs ${t.accentText} hover:underline text-right`}
+        >
+          استبدال الملف
+          <input
+            ref={inputRef}
+            type="file"
+            accept={accept}
+            className="hidden"
+            onChange={handleChange}
+          />
+        </button>
+      )}
+    </div>
+  );
 };
 
 // ─── Shared Components ────────────────────────────────────────────────────────
@@ -605,7 +778,6 @@ const CoursesSection = ({ t, toast }) => {
   };
 
   const getNiveauLabel = (id) => niveaux.find((n) => n.id === id)?.label || "—";
-
   const filtered = data.filter((x) => {
     const matchSearch = x.title.includes(search);
     const matchNiveau =
@@ -727,13 +899,13 @@ const CoursesSection = ({ t, toast }) => {
             placeholder="https://..."
             t={t}
           />
-          <Inp
-            label="رابط الملخص (اختياري)"
-            value={form.resumeUrl}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, resumeUrl: e.target.value }))
-            }
-            placeholder="https://..."
+          {/* ── resumeUrl → file upload ── */}
+          <FileUploadField
+            label="ملف الملخص (اختياري)"
+            currentUrl={form.resumeUrl}
+            onUploaded={(url) => setForm((f) => ({ ...f, resumeUrl: url }))}
+            onClear={() => setForm((f) => ({ ...f, resumeUrl: "" }))}
+            accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*"
             t={t}
           />
           <div className="flex gap-3 justify-start mt-2">
@@ -798,7 +970,6 @@ const ChaptersSection = ({ t, toast }) => {
     setModal(true);
   };
 
-  // Courses filtered by the active page-level niveau filter
   const modalCourses = niveauFilter
     ? courses.filter((c) => String(c.niveauId) === niveauFilter)
     : courses;
@@ -837,25 +1008,18 @@ const ChaptersSection = ({ t, toast }) => {
   };
 
   const getCourseTitle = (id) => courses.find((c) => c.id === id)?.title || "—";
-  // Get niveauId for a chapter via its course
-  const getNiveauIdForChapter = (chapterId) => {
-    const chapter = data.find((ch) => ch.id === chapterId);
-    if (!chapter) return null;
-    const course = courses.find((c) => c.id === chapter.courseId);
-    return course ? course.niveauId : null;
-  };
-
-  const filtered = data.filter((x) => {
-    const matchSearch = x.title.includes(search);
-    if (!matchNiveauFilter(x, niveauFilter, courses)) return false;
-    return matchSearch;
-  });
 
   function matchNiveauFilter(chapter, filter, coursesList) {
     if (filter === "") return true;
     const course = coursesList.find((c) => c.id === chapter.courseId);
     return course ? String(course.niveauId) === filter : false;
   }
+
+  const filtered = data.filter((x) => {
+    const matchSearch = x.title.includes(search);
+    if (!matchNiveauFilter(x, niveauFilter, courses)) return false;
+    return matchSearch;
+  });
 
   return (
     <div>
@@ -971,13 +1135,13 @@ const ChaptersSection = ({ t, toast }) => {
             placeholder="https://..."
             t={t}
           />
-          <Inp
-            label="رابط الملخص (اختياري)"
-            value={form.resumeUrl}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, resumeUrl: e.target.value }))
-            }
-            placeholder="https://..."
+          {/* ── resumeUrl → file upload ── */}
+          <FileUploadField
+            label="ملف الملخص (اختياري)"
+            currentUrl={form.resumeUrl}
+            onUploaded={(url) => setForm((f) => ({ ...f, resumeUrl: url }))}
+            onClear={() => setForm((f) => ({ ...f, resumeUrl: "" }))}
+            accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*"
             t={t}
           />
           <div className="flex gap-3 justify-start mt-2">
@@ -1055,7 +1219,6 @@ const SeriesSection = ({ t, toast }) => {
     setModal(true);
   };
 
-  // Chapters shown in modal: filtered by the active page-level niveau filter
   const modalChapters = niveauFilter
     ? chapters.filter((ch) => {
         const course = courses.find((c) => c.id === ch.courseId);
@@ -1225,24 +1388,27 @@ const SeriesSection = ({ t, toast }) => {
               </option>
             ))}
           </Sel>
-          <Inp
-            label="رابط السلسلة (اختياري)"
-            value={form.serieUrl}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, serieUrl: e.target.value }))
-            }
-            placeholder="https://..."
+
+          {/* ── serieUrl → file upload ── */}
+          <FileUploadField
+            label="ملف السلسلة (اختياري)"
+            currentUrl={form.serieUrl}
+            onUploaded={(url) => setForm((f) => ({ ...f, serieUrl: url }))}
+            onClear={() => setForm((f) => ({ ...f, serieUrl: "" }))}
+            accept="application/pdf,image/*"
             t={t}
           />
-          <Inp
-            label="رابط الحل (اختياري)"
-            value={form.solutionUrl}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, solutionUrl: e.target.value }))
-            }
-            placeholder="https://..."
+
+          {/* ── solutionUrl → file upload ── */}
+          <FileUploadField
+            label="ملف الحل (اختياري)"
+            currentUrl={form.solutionUrl}
+            onUploaded={(url) => setForm((f) => ({ ...f, solutionUrl: url }))}
+            onClear={() => setForm((f) => ({ ...f, solutionUrl: "" }))}
+            accept="application/pdf,image/*"
             t={t}
           />
+
           <Inp
             label="رابط الفيديو (اختياري)"
             value={form.videoUrl}
@@ -1420,7 +1586,6 @@ export default function Dashboard() {
         * { box-sizing: border-box; }
       `}</style>
 
-      {/* ── Mobile overlay ── */}
       <AnimatePresence>
         {mobileSidebarOpen && (
           <motion.div
@@ -1439,7 +1604,6 @@ export default function Dashboard() {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={`${t.sidebar} flex-col h-screen sticky top-0 overflow-hidden z-20 hidden md:flex`}
       >
-        {/* Logo */}
         <div
           className={`flex items-center gap-3 flex-row-reverse px-4 py-5 border-b ${t.divider}`}
         >
@@ -1461,8 +1625,6 @@ export default function Dashboard() {
             )}
           </AnimatePresence>
         </div>
-
-        {/* Nav */}
         <nav className="flex-1 py-4 px-2 flex flex-col gap-1">
           {NAV.map((item) => (
             <button
@@ -1487,8 +1649,6 @@ export default function Dashboard() {
             </button>
           ))}
         </nav>
-
-        {/* Bottom */}
         <div className={`px-2 py-4 border-t ${t.divider} flex flex-col gap-2`}>
           <button
             onClick={() => setIsDark((d) => !d)}
@@ -1526,7 +1686,7 @@ export default function Dashboard() {
         </div>
       </motion.aside>
 
-      {/* ── Mobile Drawer Sidebar ── */}
+      {/* ── Mobile Drawer ── */}
       <AnimatePresence>
         {mobileSidebarOpen && (
           <motion.aside
@@ -1536,7 +1696,6 @@ export default function Dashboard() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className={`${t.sidebar} fixed top-0 right-0 h-full w-64 z-40 flex flex-col md:hidden shadow-2xl`}
           >
-            {/* Logo */}
             <div
               className={`flex items-center justify-between px-4 py-5 border-b ${t.divider}`}
             >
@@ -1557,8 +1716,6 @@ export default function Dashboard() {
                 </span>
               </div>
             </div>
-
-            {/* Nav */}
             <nav className="flex-1 py-4 px-2 flex flex-col gap-1">
               {NAV.map((item) => (
                 <button
@@ -1572,8 +1729,6 @@ export default function Dashboard() {
                 </button>
               ))}
             </nav>
-
-            {/* Theme toggle */}
             <div className={`px-2 py-4 border-t ${t.divider}`}>
               <button
                 onClick={() => setIsDark((d) => !d)}
@@ -1591,7 +1746,6 @@ export default function Dashboard() {
 
       {/* ── Main ── */}
       <main className="flex-1 min-h-screen overflow-y-auto pb-20 md:pb-0">
-        {/* Mobile top bar */}
         <div
           className={`md:hidden flex items-center justify-between px-4 py-3 border-b ${t.divider} ${t.bg} sticky top-0 z-10`}
         >
@@ -1616,7 +1770,6 @@ export default function Dashboard() {
             <Menu size={20} />
           </button>
         </div>
-
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <AnimatePresence mode="wait">
             <motion.div
@@ -1649,7 +1802,6 @@ export default function Dashboard() {
         ))}
       </nav>
 
-      {/* ── Toast ── */}
       <AnimatePresence>
         {toast && (
           <Toast

@@ -1,7 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
@@ -247,7 +247,9 @@ function ChapterCard({ ch, color, light, index }) {
         <div className="flex items-center gap-2 shrink-0 mr-2">
           {ch.resumeUrl && (
             <a
-              href={ch.resumeUrl}
+              href={`https://docs.google.com/gview?url=${encodeURIComponent(
+                ch.resumeUrl,
+              )}&embedded=true`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
@@ -327,54 +329,52 @@ function ChapterCard({ ch, color, light, index }) {
 }
 
 // ─── Courses Section ───────────────────────────────────────────────────────────
-function CoursesSection() {
+function CoursesSection({ data }) {
   return (
     <div>
-      {niveaux.map((niveau) => (
-        <div key={niveau.id} className="mb-10">
-          {/* Niveau label */}
-          <div className="flex items-center gap-3 mb-4">
-            <div
-              className="w-1 h-6 rounded-full"
-              style={{ background: niveau.color }}
-            />
-            <span className="font-black text-gray-800 text-base">
-              {niveau.label}
-            </span>
-            <span
-              className="text-xs font-bold px-2 py-0.5 rounded-full border"
-              style={{ borderColor: niveau.color, color: niveau.color }}
-            >
-              {niveau.tag}
-            </span>
-          </div>
-          {/* Courses */}
-          {niveau.courses.map((course) => (
-            <div key={course.id} className="mb-6">
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <Layers
-                  className="h-3.5 w-3.5"
-                  style={{ color: niveau.color }}
-                />
-                <h3 className="font-bold text-gray-700 text-sm">
-                  {course.title}
-                </h3>
-              </div>
-              <div className="space-y-3">
-                {course.chapters.map((ch, i) => (
-                  <ChapterCard
-                    key={ch.id}
-                    ch={ch}
-                    color={niveau.color}
-                    light={niveau.light}
-                    index={i}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
+      <div key={data.id} className="mb-10">
+        {/* Niveau label */}
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className="w-1 h-6 rounded-full"
+            style={{ background: niveaux[0].color }}
+          />
+          <span className="font-black text-gray-800 text-base">
+            {data.label}
+          </span>
+          <span
+            className="text-xs font-bold px-2 py-0.5 rounded-full border"
+            style={{ borderColor: niveaux[0].color, color: niveaux[0].color }}
+          >
+            {data.tag}
+          </span>
         </div>
-      ))}
+        {/* Courses */}
+        {data?.courses?.map((course) => (
+          <div key={course.id} className="mb-6">
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <Layers
+                className="h-3.5 w-3.5"
+                style={{ color: niveaux[0].color }}
+              />
+              <h3 className="font-bold text-gray-700 text-sm">
+                {course.title}
+              </h3>
+            </div>
+            <div className="space-y-3">
+              {course.chapters.map((ch, i) => (
+                <ChapterCard
+                  key={ch.id}
+                  ch={ch}
+                  color={niveaux[0].color}
+                  light={niveaux[0].light}
+                  index={i}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -400,10 +400,20 @@ function PlaceholderSection({ section }) {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function CoursesPage() {
   const [activeSection, setActiveSection] = useState("courses");
+  const [fullData, setfullData] = useState([]);
   const { data: session } = useSession();
-  console.log(session.user?.niveau || null);
+  console.log("niveau" + session.user?.niveauId || null);
   const current = SECTIONS.find((s) => s.id === activeSection);
-
+  const getfulldata = async () => {
+    if (session.user?.niveauId) {
+      const r = await getNiveauFullTree(session.user?.niveauId);
+      setfullData(r);
+      console.log("data" + JSON.stringify(r));
+    }
+  };
+  useEffect(() => {
+    getfulldata();
+  }, []);
   const handleNav = (id) => {
     setActiveSection(id);
   };
@@ -502,7 +512,9 @@ export default function CoursesPage() {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
               >
-                {activeSection === "courses" && <CoursesSection />}
+                {activeSection === "courses" && (
+                  <CoursesSection data={fullData} />
+                )}
                 {activeSection !== "courses" && (
                   <PlaceholderSection section={current} />
                 )}

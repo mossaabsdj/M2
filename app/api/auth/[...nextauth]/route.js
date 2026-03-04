@@ -39,6 +39,7 @@ export const authOptions = {
           name: user.fullName || user.User,
           email: user.email,
           role: user.role || "CLIENT",
+          niveauId: user.niveauId, // ✅ أضف هذا
         };
       },
     }),
@@ -56,6 +57,7 @@ export const authOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.niveauId = user.niveauId; // ✅ مهم جداً
       }
       return token;
     },
@@ -63,6 +65,7 @@ export const authOptions = {
     async session({ session, token }) {
       session.user.id = token.id;
       session.user.role = token.role;
+      session.user.niveauId = token.niveauId;
       return session;
     },
   },
