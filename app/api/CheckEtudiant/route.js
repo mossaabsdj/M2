@@ -17,8 +17,8 @@ export async function POST(req) {
     }
 
     // ── 2. Body ───────────────────────────────────────────────────────
-    const { uid, sessionDelay, sall } = await req.json();
-    console.log(uid + "+" + sessionDelay + "+" + sall + "+" + token);
+    const { uid, Session_ID } = await req.json();
+    console.log(uid + "+" + Session_ID + "+" + token);
 
     // ── 3. UID ────────────────────────────────────────────────────────
     if (!uid) {
@@ -28,18 +28,36 @@ export async function POST(req) {
       );
     }
 
-    // ── 4. Professor check ────────────────────────────────────────────
-    if (uid === "F16A0801") {
+    // ── 4. Session ID ─────────────────────────────────────────────────
+    if (!Session_ID) {
       return Response.json(
-        { status: 200, code: "SESSION_OPENED", session_id: "122" },
+        {
+          status: 400,
+          code: "MISSING_SESSION_ID",
+          description: "Session ID est requis",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ── 5. Student check ──────────────────────────────────────────────
+    if (uid === "STUDENT_UID_HERE") {
+      return Response.json(
+        {
+          status: 200,
+          code: "ATTENDANCE_MARKED",
+          description: "Présence enregistrée avec succès",
+          session_id: Session_ID,
+          uid,
+        },
         { status: 200 },
       );
     } else {
       return Response.json(
         {
           status: 404,
-          code: "PROFESSOR_NOT_FOUND",
-          description: "Professeur non reconnu",
+          code: "STUDENT_NOT_FOUND",
+          description: "Étudiant non reconnu",
         },
         { status: 404 },
       );

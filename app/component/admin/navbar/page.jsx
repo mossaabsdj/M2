@@ -24,8 +24,6 @@ const TEXTS = {
   logout: "تسجيل الخروج",
 
   navItemsAdmin: [
-    { label: "المنتجات", href: "/admin/products" },
-    { label: "الطلبات", href: "/admin/commande" },
     { label: "المستويات والدروس", href: "/admin/Courses" },
     { label: "المستخدمون", href: "/admin/Users" },
     { label: "الإعدادات", href: "/admin/parametre" },

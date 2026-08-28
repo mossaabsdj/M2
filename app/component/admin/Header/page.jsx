@@ -29,32 +29,16 @@ const DEFAULT_CONFIG = {
     border: "#d1fae5", // Borders (#d1fae5)
     borderMd: "#86efac", // Medium border (#86efac)
   },
-  nav: [
+  navAdmin: [
     { label: "الرئيسية", href: "" },
-    { label: "دروسي", href: "" },
-    { label: "المستويات", href: "" },
-    { label: "ماذا يقول طلابنا؟", href: "" },
+    { label: "إدارة الدروس", href: "" },
+    { label: "إدارة المستخدمين", href: "" },
+    { label: "الإعدادات", href: "" },
   ],
-
-  levels: {
-    cem: {
-      label: "CEM — متوسط",
-      items: [
-        { badge: "1م", label: "السنة الأولى متوسط", href: "#" },
-        { badge: "2م", label: "السنة الثانية متوسط", href: "#" },
-        { badge: "3م", label: "السنة الثالثة متوسط", href: "#" },
-        { badge: "4م", label: "السنة الرابعة متوسط", href: "#" },
-      ],
-    },
-    lycee: {
-      label: "Lycée — ثانوي",
-      items: [
-        { badge: "1ث", label: "السنة الأولى ثانوي", href: "#" },
-        { badge: "2ث", label: "السنة الثانية ثانوي", href: "#" },
-        { badge: "3ث", label: "السنة الثالثة ثانوي", href: "#" },
-      ],
-    },
-  },
+  navUser: [
+    { label: "الرئيسية", href: "" },
+    { label: "الإعدادات", href: "" },
+  ],
 
   cta: {
     login: "دخول",
@@ -499,30 +483,7 @@ function MobileNav({
             {mobLink("🏠", "الرئيسية")}
 
             <Divider />
-            <SectionLabel label="متوسط — CEM" color={theme.primary} />
-            {levels.cem.items.map((item) =>
-              mobLink(
-                item.badge,
-                item.label,
-                item.href,
-                theme.primaryXDark,
-                theme.primaryLight,
-              ),
-            )}
 
-            <Divider />
-            <SectionLabel label="ثانوي — Lycée" color={theme.accent} />
-            {levels.lycee.items.map((item) =>
-              mobLink(
-                item.badge,
-                item.label,
-                item.href,
-                theme.accent,
-                theme.accentLight,
-              ),
-            )}
-
-            <Divider />
             {nav
               .filter((n) => !n.active)
               .map((n) =>
@@ -619,7 +580,8 @@ export default function MathProfHeader({
   setSelectedNav,
   selectedNav,
 }) {
-  const { brand, theme, nav, levels, cta, userMenu, AdminMenu } = config;
+  const { brand, theme, navAdmin, navUser, levels, cta, userMenu, AdminMenu } =
+    config;
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -680,29 +642,57 @@ export default function MathProfHeader({
 
           {/* ── Desktop Nav ── */}
           <nav className="hidden lg:flex items-center gap-0.5">
-            {nav.map((item) => {
-              const isActive = selectedNav === item.label;
-              console.log(isActive + selectedNav + item.label);
-              return (
-                <motion.button
-                  key={item.label}
-                  onClick={() => setSelectedNav(item.label)}
-                  className="text-[0.985rem] font-bold px-4 py-[7px] rounded-[9px] no-underline transition-colors whitespace-nowrap"
-                  style={{
-                    color: isActive ? theme.primaryDark : theme.muted,
-                    background: isActive ? theme.primaryLight : "transparent",
-                    fontWeight: isActive ? 600 : 500,
-                  }}
-                  whileHover={{
-                    backgroundColor: theme.primaryLight,
-                    color: theme.primaryDark,
-                  }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  {item.label}
-                </motion.button>
-              );
-            })}
+            {user?.role === "admin"
+              ? navAdmin.map((item) => {
+                  const isActive = selectedNav === item.label;
+                  console.log(isActive + selectedNav + item.label);
+                  return (
+                    <motion.button
+                      key={item.label}
+                      onClick={() => setSelectedNav(item.label)}
+                      className="text-[0.985rem] font-bold px-4 py-[7px] rounded-[9px] no-underline transition-colors whitespace-nowrap"
+                      style={{
+                        color: isActive ? theme.primaryDark : theme.muted,
+                        background: isActive
+                          ? theme.primaryLight
+                          : "transparent",
+                        fontWeight: isActive ? 600 : 500,
+                      }}
+                      whileHover={{
+                        backgroundColor: theme.primaryLight,
+                        color: theme.primaryDark,
+                      }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      {item.label}
+                    </motion.button>
+                  );
+                })
+              : navUser.map((item) => {
+                  const isActive = selectedNav === item.label;
+                  console.log("user" + JSON.stringify(user));
+                  return (
+                    <motion.button
+                      key={item.label}
+                      onClick={() => setSelectedNav(item.label)}
+                      className="text-[0.985rem] font-bold px-4 py-[7px] rounded-[9px] no-underline transition-colors whitespace-nowrap"
+                      style={{
+                        color: isActive ? theme.primaryDark : theme.muted,
+                        background: isActive
+                          ? theme.primaryLight
+                          : "transparent",
+                        fontWeight: isActive ? 600 : 500,
+                      }}
+                      whileHover={{
+                        backgroundColor: theme.primaryLight,
+                        color: theme.primaryDark,
+                      }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      {item.label}
+                    </motion.button>
+                  );
+                })}
 
             {/* Levels  <div className="relative" ref={levelsRef}>
               <motion.button
